@@ -96,7 +96,7 @@ public class CountBolt implements IRichBolt {
 	public Map<String, Object> getComponentConfiguration() {
 		return null;
 	}
-	private static List<Entry<String, Integer>> sortByComparator(Map<String, Integer> unsortMap) {
+	public static List<Entry<String, Integer>> sortByComparator(Map<String, Integer> unsortMap) {
 
 		List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
 
