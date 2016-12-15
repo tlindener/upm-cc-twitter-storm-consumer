@@ -23,11 +23,15 @@ import org.apache.storm.topology.TopologyBuilder;
 public class Top3App {
 	public static void main(String[] args) throws Exception {
 
+		System.out.println("Remember to use zookeeperUrl instead of kafkaUrl!");
+		if(args.length < 4 )
+		{
+			System.out.println("Parameters missing. Use following definition");
+			System.out.println("languageList zookeeperUrl stormTopologyName folderName");
+		}
 		Config config = new Config();
 		// config.setDebug(true);
 		config.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 1);
-
-		// Kafka Topic
 
 		HashMap<String, String> langList = new HashMap<String, String>();
 		TopologyBuilder builder = new TopologyBuilder();
@@ -43,17 +47,17 @@ public class Top3App {
 		String zookeeperUrl = args[1];
 		String topologyName = args[2];
 		String folder = args[3];
-//        GlobalPartitionInformation hostsAndPartitions = new GlobalPartitionInformation();
-//        hostsAndPartitions.addPartition(0, new Broker("localhost", 9092));
-//BrokerHosts brokerHosts = new StaticHosts(hostsAndPartitions);
-//		
+	
+		//Build Topology, using one Spout for each language topic on Kafka
 		for (Entry<String, String> lang : langList.entrySet()) {
+			//Setup Spout with zookeeper Url
 			SpoutConfig kafkaSpoutConfig = new SpoutConfig(new ZkHosts(zookeeperUrl), lang.getKey(),
 					"/" +  lang.getKey(), UUID.randomUUID().toString());
 			kafkaSpoutConfig.bufferSizeBytes = 1024 * 1024 * 4;
 			kafkaSpoutConfig.fetchSizeBytes = 1024 * 1024 * 4;
 			kafkaSpoutConfig.scheme = new org.apache.storm.spout.SchemeAsMultiScheme(new StringScheme());
 			builder.setSpout(lang + "kafka-spout", new KafkaSpout(kafkaSpoutConfig));
+			//Set CountBolt with language and key word parameter
 			builder.setBolt(lang + "word-counter", new CountBolt(lang.getKey(), lang.getValue(), folder))
 					.shuffleGrouping(lang + "kafka-spout");
 		}
