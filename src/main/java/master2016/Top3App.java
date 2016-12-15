@@ -20,6 +20,8 @@ import org.apache.storm.kafka.ZkHosts;
 import org.apache.storm.kafka.trident.GlobalPartitionInformation;
 import org.apache.storm.topology.TopologyBuilder;
 
+import master2016.bolts.CountBolt;
+
 public class Top3App {
 	public static void main(String[] args) throws Exception {
 
@@ -30,6 +32,7 @@ public class Top3App {
 			System.out.println("languageList zookeeperUrl stormTopologyName folderName");
 		}
 		Config config = new Config();
+		// Used in case of debugging
 		// config.setDebug(true);
 		config.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 1);
 
@@ -48,7 +51,7 @@ public class Top3App {
 		String topologyName = args[2];
 		String folder = args[3];
 	
-		//Build Topology, using one Spout for each language topic on Kafka
+		//dynamically build Topology, using one Spout for each language topic on Kafka
 		for (Entry<String, String> lang : langList.entrySet()) {
 			//Setup Spout with zookeeper Url
 			SpoutConfig kafkaSpoutConfig = new SpoutConfig(new ZkHosts(zookeeperUrl), lang.getKey(),
@@ -62,9 +65,12 @@ public class Top3App {
 					.shuffleGrouping(lang + "kafka-spout");
 		}
 
-		//LocalCluster cluster = new LocalCluster();
+
 		StormSubmitter.submitTopology(topologyName, config, builder.createTopology());
 		
+		// Implementation based on the local cluster
+		
+		//LocalCluster cluster = new LocalCluster();
 		//cluster.submitTopology(topologyName, config, builder.createTopology());
 		//Thread.sleep(10000);
 		//cluster.shutdown();

@@ -4,11 +4,12 @@
 * @version 1.0
 * @since   2016-11-22 
 */
-package master2016;
+package master2016.bolts;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -34,13 +35,12 @@ public class CountBolt implements IRichBolt {
 	String keyword;
 	boolean keyWordAppeared = false;
 	String folder;
-	List<String> lines;
+	int lineCounter = 1;
 
 	public CountBolt(String language, String keyword, String folder) {
 		this.language = language;
 		this.keyword = keyword;
 		this.folder = folder;
-		this.lines = new ArrayList<String>();
 	}
 
 	@Override
@@ -57,11 +57,10 @@ public class CountBolt implements IRichBolt {
 			// deactivate keyword listener
 			this.keyWordAppeared = false;
 			if (!counters.isEmpty()) {
-				lines.add(saveLine(counters));
-				writeLogFile("");
-				// System.out.println("Overwrite counters");
+				writeAppendLine(saveLine(counters,lineCounter));
+				lineCounter++;
 				counters = new Object2IntLinkedOpenHashMap<String>();
-				// System.out.println("size of counters " + counters.size());
+
 			}
 
 		} else if (str.equalsIgnoreCase(keyword) && !this.keyWordAppeared) {
@@ -86,8 +85,6 @@ public class CountBolt implements IRichBolt {
 	@Override
 	public void cleanup() {
 
-		writeLogFile("-cleanup");
-
 	}
 
 	@Override
@@ -107,13 +104,16 @@ public class CountBolt implements IRichBolt {
 		Collections.sort(list, new Comparator<Entry<String, Integer>>() {
 			public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
 
+				// compare based on the count of the hashtag
 				int value = o2.getValue().compareTo(o1.getValue());
+				//additionally compare based on the alphabetical order
 				int key = o1.getKey().compareToIgnoreCase(o2.getKey());
+				
+				// if the values are equal, compare based on the hashtag option
 				if(value != 0)
 					return value;
 				else
-					return key;
-				
+					return key;			
 
 			}
 		});
@@ -122,11 +122,12 @@ public class CountBolt implements IRichBolt {
 		return list;
 		}
 
-	private String saveLine(Object2IntLinkedOpenHashMap<String> hashtags) {
+	private String saveLine(Object2IntLinkedOpenHashMap<String> hashtags,int counter) {
 		// System.out.println("Save line");
 		
 		List<Entry<String,Integer>> sorted = sortByComparator(hashtags);
 		StringBuffer sb = new StringBuffer();
+		sb.append(counter);
 		sb.append(",");
 		sb.append(this.language);
 		int cnt = 1;
@@ -135,41 +136,36 @@ public class CountBolt implements IRichBolt {
 			if (cnt > 3) {
 				break;
 			}
-			// System.out.println("," + i.getKey() + "," + i.getValue());
+
 			sb.append("," + i.getKey() + "," + i.getValue());
 			cnt++;
 		}
 		return sb.toString();
 	}
 
-	private void writeLogFile(String string) {
-
-		FileWriter fw = null;
+	private void writeAppendLine(String line){
+		 
+		PrintWriter fw = null;
 
 		try {
-			fw = new FileWriter(new File(this.folder, this.language + "_10"+ string +".log").toString());
+			fw = new PrintWriter(new File(this.folder, this.language + "_10.log").toString());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		try {
-
-			for (int i = 0; i < lines.size(); i++) {
-				fw.write(i + 1 + lines.get(i) + "\n");
-			}
+			fw.append(line);
 			fw.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			if (fw != null) {
-				try {
-					fw.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				fw.close();
 			}
 
 		}
 
 	}
+	
+
 }
+
