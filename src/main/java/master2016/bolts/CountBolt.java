@@ -140,6 +140,8 @@ public class CountBolt implements IRichBolt {
 			sb.append("," + i.getKey() + "," + i.getValue());
 			cnt++;
 		}
+		//ensure line break
+		sb.append(System.getProperty("line.separator"));
 		return sb.toString();
 	}
 
@@ -148,12 +150,15 @@ public class CountBolt implements IRichBolt {
 		PrintWriter fw = null;
 
 		try {
-			fw = new PrintWriter(new File(this.folder, this.language + "_10.log").toString());
+			//Securely create a path out of multiple components
+			String filePath = new File(this.folder, this.language + "_10.log").toString();
+			//use fileWriter in order to ensure append instead of overwrite
+			fw = new PrintWriter(new FileWriter(filePath, true));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		try {
+		try {			
 			fw.append(line);
 			fw.close();
 		} catch (Exception ex) {
