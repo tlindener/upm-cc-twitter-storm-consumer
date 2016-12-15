@@ -12,10 +12,12 @@ import java.util.UUID;
 
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
+import org.apache.storm.StormSubmitter;
 import org.apache.storm.kafka.KafkaSpout;
 import org.apache.storm.kafka.SpoutConfig;
 import org.apache.storm.kafka.StringScheme;
 import org.apache.storm.kafka.ZkHosts;
+import org.apache.storm.kafka.trident.GlobalPartitionInformation;
 import org.apache.storm.topology.TopologyBuilder;
 
 public class Top3App {
@@ -26,7 +28,6 @@ public class Top3App {
 		config.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 1);
 
 		// Kafka Topic
-		String topic = "hashtags-";
 
 		HashMap<String, String> langList = new HashMap<String, String>();
 		TopologyBuilder builder = new TopologyBuilder();
@@ -42,10 +43,13 @@ public class Top3App {
 		String zookeeperUrl = args[1];
 		String topologyName = args[2];
 		String folder = args[3];
-
+//        GlobalPartitionInformation hostsAndPartitions = new GlobalPartitionInformation();
+//        hostsAndPartitions.addPartition(0, new Broker("localhost", 9092));
+//BrokerHosts brokerHosts = new StaticHosts(hostsAndPartitions);
+//		
 		for (Entry<String, String> lang : langList.entrySet()) {
-			SpoutConfig kafkaSpoutConfig = new SpoutConfig(new ZkHosts(zookeeperUrl), topic + lang.getKey(),
-					"/" + topic, UUID.randomUUID().toString());
+			SpoutConfig kafkaSpoutConfig = new SpoutConfig(new ZkHosts(zookeeperUrl), lang.getKey(),
+					"/" +  lang.getKey(), UUID.randomUUID().toString());
 			kafkaSpoutConfig.bufferSizeBytes = 1024 * 1024 * 4;
 			kafkaSpoutConfig.fetchSizeBytes = 1024 * 1024 * 4;
 			kafkaSpoutConfig.scheme = new org.apache.storm.spout.SchemeAsMultiScheme(new StringScheme());
@@ -54,10 +58,12 @@ public class Top3App {
 					.shuffleGrouping(lang + "kafka-spout");
 		}
 
-		LocalCluster cluster = new LocalCluster();
-		cluster.submitTopology(topologyName, config, builder.createTopology());
-		Thread.sleep(10000);
-		cluster.shutdown();
+		//LocalCluster cluster = new LocalCluster();
+		StormSubmitter.submitTopology(topologyName, config, builder.createTopology());
+		
+		//cluster.submitTopology(topologyName, config, builder.createTopology());
+		//Thread.sleep(10000);
+		//cluster.shutdown();
 
 	}
 }

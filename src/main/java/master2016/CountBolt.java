@@ -10,6 +10,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -55,6 +58,7 @@ public class CountBolt implements IRichBolt {
 			this.keyWordAppeared = false;
 			if (!counters.isEmpty()) {
 				lines.add(saveLine(counters));
+				writeLogFile("");
 				// System.out.println("Overwrite counters");
 				counters = new Object2IntLinkedOpenHashMap<String>();
 				// System.out.println("size of counters " + counters.size());
@@ -82,7 +86,7 @@ public class CountBolt implements IRichBolt {
 	@Override
 	public void cleanup() {
 
-		writeLogFile();
+		writeLogFile("-cleanup");
 
 	}
 
@@ -95,14 +99,39 @@ public class CountBolt implements IRichBolt {
 	public Map<String, Object> getComponentConfiguration() {
 		return null;
 	}
+	private static List<Entry<String, Integer>> sortByComparator(Map<String, Integer> unsortMap) {
+
+		List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
+
+		// Sorting the list based on values
+		Collections.sort(list, new Comparator<Entry<String, Integer>>() {
+			public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+
+				int value = o2.getValue().compareTo(o1.getValue());
+				int key = o1.getKey().compareToIgnoreCase(o2.getKey());
+				if(value != 0)
+					return value;
+				else
+					return key;
+				
+
+			}
+		});
+
+		
+		return list;
+		}
 
 	private String saveLine(Object2IntLinkedOpenHashMap<String> hashtags) {
 		// System.out.println("Save line");
+		
+		List<Entry<String,Integer>> sorted = sortByComparator(hashtags);
 		StringBuffer sb = new StringBuffer();
 		sb.append(",");
 		sb.append(this.language);
 		int cnt = 1;
-		for (Entry<String, Integer> i : counters.object2IntEntrySet()) {
+
+		for (Entry<String, Integer> i : sorted) {
 			if (cnt > 3) {
 				break;
 			}
@@ -113,12 +142,12 @@ public class CountBolt implements IRichBolt {
 		return sb.toString();
 	}
 
-	private void writeLogFile() {
+	private void writeLogFile(String string) {
 
 		FileWriter fw = null;
 
 		try {
-			fw = new FileWriter(new File(this.folder, this.language + "_10.log").toString());
+			fw = new FileWriter(new File(this.folder, this.language + "_10"+ string +".log").toString());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
