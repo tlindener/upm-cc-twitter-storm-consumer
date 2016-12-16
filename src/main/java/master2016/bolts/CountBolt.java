@@ -22,11 +22,12 @@ import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.IRichBolt;
 import org.apache.storm.topology.OutputFieldsDeclarer;
+import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
 
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 
-public class CountBolt implements IRichBolt {
+public class CountBolt extends BaseRichBolt {
 	private static final long serialVersionUID = -4010102946325148515L;
 	// Map<String, Integer> counters;
 	Object2IntLinkedOpenHashMap<String> counters;
@@ -43,13 +44,11 @@ public class CountBolt implements IRichBolt {
 		this.folder = folder;
 	}
 
-	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.counters = new Object2IntLinkedOpenHashMap<String>();
 		this.collector = collector;
 	}
 
-	@Override
 	public void execute(Tuple input) {
 		String str = input.getString(0);
 
@@ -107,7 +106,7 @@ public class CountBolt implements IRichBolt {
 				// compare based on the count of the hashtag
 				int value = o2.getValue().compareTo(o1.getValue());
 				//additionally compare based on the alphabetical order
-				int key = o1.getKey().compareToIgnoreCase(o2.getKey());
+				int key = o1.getKey().compareTo(o2.getKey());
 				
 				// if the values are equal, compare based on the hashtag option
 				if(value != 0)
@@ -126,6 +125,7 @@ public class CountBolt implements IRichBolt {
 		// System.out.println("Save line");
 		
 		List<Entry<String,Integer>> sorted = sortByComparator(hashtags);
+
 		StringBuffer sb = new StringBuffer();
 		sb.append(counter);
 		sb.append(",");
@@ -139,6 +139,12 @@ public class CountBolt implements IRichBolt {
 
 			sb.append("," + i.getKey() + "," + i.getValue());
 			cnt++;
+		}
+		if(sorted.size() == 1){
+			sb.append(",null,0,null,0");
+		}
+		if(sorted.size() == 2){
+			sb.append(",null,0");
 		}
 		//ensure line break
 		sb.append(System.getProperty("line.separator"));
