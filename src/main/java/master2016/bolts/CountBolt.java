@@ -6,9 +6,12 @@
 */
 package master2016.bolts;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -157,24 +160,26 @@ public class CountBolt extends BaseRichBolt {
 
 	private void writeAppendLine(String line){
 		 
-		PrintWriter fw = null;
+		//Securely create a path out of multiple components
+		String filePath = new File(this.folder, this.language + "_10.log").toString();
 
+	    BufferedWriter fw = null;
 		try {
-			//Securely create a path out of multiple components
-			String filePath = new File(this.folder, this.language + "_10.log").toString();
-			//use fileWriter in order to ensure append instead of overwrite
-			fw = new PrintWriter(new FileWriter(filePath, true));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		try {			
-			fw.append(line);
-			fw.close();
+		    OutputStreamWriter writer = new OutputStreamWriter(
+	                new FileOutputStream(filePath, true), "UTF-8");
+	          fw   = new BufferedWriter(writer);
+	            fw.write(line);
+	            fw.close();
+
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			if (fw != null) {
-				fw.close();
+				try {
+					fw.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 
 		}

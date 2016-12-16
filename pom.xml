@@ -33,6 +33,7 @@
 		
 	</dependencies>
 	<properties>
+	   <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<buildDirectory>${project.basedir}/twitterApp/</buildDirectory>
 	</properties>
 	<build>
