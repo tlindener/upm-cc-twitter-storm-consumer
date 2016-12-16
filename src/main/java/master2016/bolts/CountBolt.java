@@ -45,6 +45,7 @@ public class CountBolt extends BaseRichBolt {
 		this.language = language;
 		this.keyword = keyword;
 		this.folder = folder;
+		System.setProperty("file.encoding","UTF-8");
 	}
 
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
