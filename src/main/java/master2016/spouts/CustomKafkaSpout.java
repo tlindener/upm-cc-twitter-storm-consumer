@@ -17,56 +17,57 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 
 public class CustomKafkaSpout extends BaseRichSpout {
-
+	
+	private static final long serialVersionUID = 5333992976679079370L;
 	private SpoutOutputCollector collector;
-    private KafkaConsumer<String, String> consumer;
-    private String kafkaBrokerUrls;
-private Collection<String> topics;
+	private KafkaConsumer<String, String> consumer;
+	private String kafkaBrokerUrls;
+	private Collection<String> topics;
 
-    public CustomKafkaSpout(String kafkaBrokerUrls, String topic) {
-        this.kafkaBrokerUrls = kafkaBrokerUrls;
-        this.topics = new ArrayList<String>();
-        this.topics.add(topic);
-        
-    }
+	public CustomKafkaSpout(String kafkaBrokerUrls, String topic) {
+		this.kafkaBrokerUrls = kafkaBrokerUrls;
+		this.topics = new ArrayList<String>();
+		this.topics.add(topic);
 
-    public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
-        // TODO move hardcoded arguments to the topology
-        Properties properties = new Properties();
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaBrokerUrls);
-        // TODO set static group.id
-        properties.put("group.id", ((Long) System.currentTimeMillis()).toString());
-        // TODO true or false?
-        properties.put("enable.auto.commit", "true");
-        properties.put("auto.commit.interval.ms", "1000");
-        properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+	}
 
-        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+	public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
+		// TODO move hardcoded arguments to the topology
+		Properties properties = new Properties();
+		properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaBrokerUrls);
+		// TODO set static group.id
+		properties.put("group.id", ((Long) System.currentTimeMillis()).toString());
+		// TODO true or false?
+		properties.put("enable.auto.commit", "true");
+		properties.put("auto.commit.interval.ms", "1000");
+		properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+		properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
-        // This could not be thread safe
-        consumer = new KafkaConsumer<>(properties);
+		properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
-        consumer.subscribe(topics);
-        this.collector = collector;
-    }
+		// This could not be thread safe
+		consumer = new KafkaConsumer<>(properties);
 
-    public void nextTuple() {
-        ConsumerRecords<String, String> records = consumer.poll(0);
+		//subscribe to language topic
+		consumer.subscribe(topics);
+		this.collector = collector;
+	}
 
-        if (!records.isEmpty()) {
-            
-            for (ConsumerRecord<String, String> record : records) {
-                String hashtag = record.value();
-                // non blocking operation
-                collector.emit(new Values(hashtag));
+	public void nextTuple() {
+		ConsumerRecords<String, String> records = consumer.poll(0);
 
-            
-            }
-        }
-    }
+		if (!records.isEmpty()) {
 
-    public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("hashtag"));
-    }
+			for (ConsumerRecord<String, String> record : records) {
+				//receive hashtag from Kafka
+				String hashtag = record.value();
+				collector.emit(new Values(hashtag));
+
+			}
+		}
+	}
+
+	public void declareOutputFields(OutputFieldsDeclarer declarer) {
+		declarer.declare(new Fields("hashtag"));
+	}
 }

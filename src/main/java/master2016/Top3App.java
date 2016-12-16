@@ -21,7 +21,7 @@ public class Top3App {
 		if(args.length < 4 )
 		{
 			System.out.println("Parameters missing. Use following definition");
-			System.out.println("languageList zookeeperUrl stormTopologyName folderName");
+			System.out.println("languageList kafkaUrl stormTopologyName folderName");
 		}
 		Config config = new Config();
 		// Used in case of debugging

@@ -126,6 +126,7 @@ public class CountBolt extends BaseRichBolt {
 		
 		List<Entry<String,Integer>> sorted = sortByComparator(hashtags);
 
+		//use string buffer to optimize string operations
 		StringBuffer sb = new StringBuffer();
 		sb.append(counter);
 		sb.append(",");
@@ -137,7 +138,10 @@ public class CountBolt extends BaseRichBolt {
 				break;
 			}
 
-			sb.append("," + i.getKey() + "," + i.getValue());
+			sb.append(",");
+			sb.append(i.getKey());
+			sb.append(",");
+			sb.append(i.getValue());
 			cnt++;
 		}
 		if(sorted.size() == 1){
