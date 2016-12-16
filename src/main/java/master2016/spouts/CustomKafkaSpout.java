@@ -32,12 +32,9 @@ public class CustomKafkaSpout extends BaseRichSpout {
 	}
 
 	public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
-		// TODO move hardcoded arguments to the topology
 		Properties properties = new Properties();
 		properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaBrokerUrls);
-		// TODO set static group.id
-		properties.put("group.id", ((Long) System.currentTimeMillis()).toString());
-		// TODO true or false?
+		//properties.put("group.id", ((Long) System.currentTimeMillis()).toString());
 		properties.put("enable.auto.commit", "true");
 		properties.put("auto.commit.interval.ms", "1000");
 		properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
